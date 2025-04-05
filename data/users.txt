@@ -1,0 +1,5 @@
+username,name,role
+sagar,sagar nepali,student
+hero,hero man,admin
+hen,hen man,student
+lion,lion man,admin
