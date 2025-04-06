@@ -3,8 +3,7 @@ from tkinter import messagebox
 from GUI.loginGUI import loginGUI
 from GUI.adminGUI import adminGUI
 from GUI.studentGUI import studentGUI
-import ctypes
-ctypes.windll.shcore.SetProcessDpiAwareness(1)
+
 root, login_btn,username,userpassword= loginGUI()
 
 def login():
@@ -21,21 +20,17 @@ def login():
             messagebox.showinfo("Login Successfully", f"Log In as {user_role.capitalize()}.")
             # Schedule root destruction after messagebox closes
             root.destroy()
-            root.quit()
+          
             if user_role == "admin":
-                print("ADMIN")
                 adminGUI()
 
             elif user_role == "student":
-                print("STUDENT")
                 studentGUI()
                
         else:
             messagebox.showinfo("Error", "Please enter valid username and password.")
     except FileNotFoundError:
-        messagebox.showerror("Error", f"File '{file_path}' not found.")
-    except Exception as e:
-        messagebox.showerror("Error", str(e))       
+        messagebox.showerror("Error", f"File '{file_path}' not found.")      
 
 
 login_btn.configure(command=login)
