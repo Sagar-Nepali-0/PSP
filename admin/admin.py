@@ -6,7 +6,7 @@ def main():
     
     
 def adminLogic():
-    pass
+    print("Testing")
 
 if __name__ == "__main__":
     main()
