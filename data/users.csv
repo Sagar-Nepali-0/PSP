@@ -1,0 +1,4 @@
+ID,Name,Username,Password,Email,Role
+1,admin,admin,admin123,admin@gmail.com,Admin
+2,hrn,hen,hen123,hen@gmail.com,Student
+3,fish,fishMan,fish123,fish@gmail.com,Student
