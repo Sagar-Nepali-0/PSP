@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 # Making a student management system with admin login and student data handling
-STUDENT_FILE = "students.csv"
+STUDENT_FILE = "data/students.csv"
 
 # Admin credentials
 ADMIN_USERNAME = "admin"
