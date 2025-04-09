@@ -1,86 +1,53 @@
-import sys
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QLabel, QLineEdit, QPushButton,
-    QVBoxLayout, QHBoxLayout, QFormLayout, QGroupBox, QGridLayout
-)
-from PyQt5.QtGui import QFont, QPixmap, QPainter, QColor, QBrush
-from PyQt5.QtCore import Qt, QSize
+# studentgui.py
 
-class StudentProfile(QWidget):
-    def __init__(self):
+from PyQt5.QtWidgets import (
+    QWidget, QLabel, QLineEdit, QPushButton,
+    QVBoxLayout, QHBoxLayout, QGridLayout
+)
+from PyQt5.QtGui import QFont
+from PyQt5.QtCore import pyqtSignal
+
+
+class EditStudentWindow(QWidget):
+    data_updated = pyqtSignal(dict)
+
+    def __init__(self, data):
         super().__init__()
-        self.setWindowTitle("Student Profile")
-        self.setGeometry(400, 150, 500, 450)
+        self.setWindowTitle("Edit Student Info")
         self.setFixedSize(500, 450)
+        self.data = data
         self.init_ui()
 
     def init_ui(self):
         main_layout = QVBoxLayout()
 
-        # Title
-        title = QLabel("Student Profile")
+        title = QLabel("Edit Profile")
         title.setFont(QFont("Arial", 16, QFont.Bold))
-        title.setAlignment(Qt.AlignLeft)
         main_layout.addWidget(title)
 
-        # Profile Picture
-        profile_pic = QLabel()
-        profile_pic.setFixedSize(100, 100)
-        profile_pic.setStyleSheet("border-radius: 50px; background-color: #ccc;")
-        profile_pic.setAlignment(Qt.AlignCenter)
-
-        name_label = QLabel("Student Name")
-        name_label.setAlignment(Qt.AlignCenter)
-
-        pic_layout = QVBoxLayout()
-        pic_layout.addWidget(profile_pic, alignment=Qt.AlignCenter)
-        pic_layout.addWidget(name_label)
-
-        main_layout.addLayout(pic_layout)
-        main_layout.addSpacing(10)
-
-        # Info Update Form
-        form_label = QLabel("Update Personal Information:")
-        form_label.setFont(QFont("Arial", 12, QFont.Bold))
-        main_layout.addWidget(form_label)
-
         grid_layout = QGridLayout()
+        self.fields = {}
 
-        # Left Column
-        grid_layout.addWidget(QLabel("Name:"), 0, 0)
-        grid_layout.addWidget(QLineEdit(), 0, 1)
-
-        grid_layout.addWidget(QLabel("Address:"), 1, 0)
-        grid_layout.addWidget(QLineEdit(), 1, 1)
-
-        grid_layout.addWidget(QLabel("Class:"), 2, 0)
-        grid_layout.addWidget(QLineEdit(), 2, 1)
-
-        # Right Column
-        grid_layout.addWidget(QLabel("DOB:"), 0, 2)
-        grid_layout.addWidget(QLineEdit(), 0, 3)
-
-        grid_layout.addWidget(QLabel("Contact:"), 1, 2)
-        grid_layout.addWidget(QLineEdit(), 1, 3)
-
-        grid_layout.addWidget(QLabel("Section:"), 2, 2)
-        grid_layout.addWidget(QLineEdit(), 2, 3)
+        labels = ["Name", "Address", "Class", "DOB", "Contact", "Section"]
+        for i, label in enumerate(labels):
+            row, col = divmod(i, 3)
+            grid_layout.addWidget(QLabel(f"{label}:"), row, col * 2)
+            edit = QLineEdit(self.data.get(label, ""))
+            self.fields[label] = edit
+            grid_layout.addWidget(edit, row, col * 2 + 1)
 
         main_layout.addLayout(grid_layout)
 
-        # Save Button
         save_button = QPushButton("Save")
-        save_button.setFixedWidth(80)
-        save_button.setStyleSheet("background-color: #999; color: white; border-radius: 10px;")
-        button_layout = QHBoxLayout()
-        button_layout.addStretch()
-        button_layout.addWidget(save_button)
-        main_layout.addLayout(button_layout)
+        save_button.clicked.connect(self.save_data)
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+        btn_layout.addWidget(save_button)
+        main_layout.addLayout(btn_layout)
 
         self.setLayout(main_layout)
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = StudentProfile()
-    window.show()
-    sys.exit(app.exec_())
+    def save_data(self):
+        updated_data = {label: field.text() for label, field in self.fields.items()}
+        self.data_updated.emit(updated_data)
+        self.close()

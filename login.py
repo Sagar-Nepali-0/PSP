@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import Qt
 import pandas as pd
-from admin.admin_panel import admin_panel
+# from admin.admin_panel import admin_panel
 
 # Constants
 ICON_PATH = "image/icon.png"
@@ -89,8 +89,7 @@ class LoginPage(QWidget):
 
         # Authenticate user
         user_row = user_data[
-            ((user_data['Username'] == username) | (user_data['ID'] == username)) &
-            (user_data['Password'] == password)
+            (user_data['Username'] == username)&(user_data['Password'] == password)
         ]
 
         if user_row.empty:
@@ -102,8 +101,7 @@ class LoginPage(QWidget):
 
         if user_role == "Admin":
             QMessageBox.information(self, "Login Success", "Welcome, Admin!")
-            self.close()
-            admin_panel() 
+            print("Admin") 
             # just function soon GUI appear
         elif user_role == "Student":
             QMessageBox.information(self, "Login Success", "Welcome, Student!")

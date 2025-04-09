@@ -1,73 +1,267 @@
-# Student Login interface
+import sys
 import pandas as pd
-import os
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QLabel, QLineEdit, QPushButton, QCheckBox,
+    QVBoxLayout, QHBoxLayout, QFormLayout, QMessageBox
+)
+from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtCore import Qt
+from studentGUI import EditStudentWindow
 
-# Ensure the CSV file is initialized
-STUDENT_PASSFILE = "student_credentials.csv"
-if not os.path.exists("student_credentials.csv"):
-        df = pd.DataFrame(columns=["ID", "Password"])
-        df.to_csv("student_credentials.csv", index=False)
+# Constants
+ICON_PATH = "image/icon.png"
+DATA_FILE_PATH = "data/student.csv"
+GRADE_FILE_PATH = "data/grades.csv"
 
-# Student Credentials Maker
-STUDENT = input("Enter your student ID: ")
-STUDENT_PASSWORD = input("Enter your password: ")
 
-# Check for duplicate ID
-def check_duplicate():
-    df = pd.read_csv("student_credentials.csv")
-    df = df.astype(str)  # Ensure all data is string for comparison
-    
-    if STUDENT in df['ID'].values:
-        print("❌ Error: Student already exists.")
-    else:
-        new_data = pd.DataFrame([{
-            "ID": STUDENT,
-            "Password": STUDENT_PASSWORD
-        }])
-        df = pd.concat([df, new_data], ignore_index=True)
-        df.to_csv("student_credentials.csv", index=False)
-        print("✅ Student credentials added successfully!")
+class LoginPage(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setup_window()
+        self.init_ui()
 
-# Student Login
-def student_login():
-    print("🔐 Student Login")
-    student_id = input("Student ID: ").strip()
-    password = input("Password: ").strip()
+    def setup_window(self):
+        self.setWindowTitle("Login Page")
+        self.setGeometry(500, 200, 400, 300)
+        self.setWindowIcon(QIcon(ICON_PATH))
+        self.setFixedSize(400, 300)
 
-    df = pd.read_csv("student_credentials.csv")
-    df = df.astype(str)  # Ensure all data is string for comparison
+    def init_ui(self):
+        title = QLabel("🔐 Secure Login")
+        title.setFont(QFont("Arial", 18, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
 
-    if student_id in df['ID'].values and password in df['Password'].values:
-        print("✅ Login successful!\n")
-        return True
-    else:
-        print("❌ Invalid credentials. Access denied.")
-        return False
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("Enter your username")
 
-def view_profile():
-    print("\n👤 View Profile")
-    student_id = input("Enter your Student ID: ").strip()
+        self.password_input = QLineEdit()
+        self.password_input.setEchoMode(QLineEdit.Password)
+        self.password_input.setPlaceholderText("Enter your password")
 
-    df = pd.read_csv("student_credentials.csv")
-    df = df.astype(str)  # Ensure all data is string for comparison
+        self.remember_me = QCheckBox("Remember Me")
 
-    if student_id in df['ID'].values:
-        student_data = df[df['ID'] == student_id]
-        print(student_data.to_string(index=False))
-    else:
-        print("❌ Student ID not found.")
+        login_button = QPushButton("Login")
+        login_button.setStyleSheet("background-color: #4CAF50; color: white;")
+        login_button.clicked.connect(self.handle_login)
 
-# Student Interface
-def student_interface():
-    print("Welcome to the Student Interface!")
-    print("1. View Profile")
-    print("2. Logout")
+        cancel_button = QPushButton("Cancel")
+        cancel_button.setStyleSheet("background-color: #f44336; color: white;")
+        cancel_button.clicked.connect(self.close)
 
-    choice = input("Select an option: ")
+        form_layout = QFormLayout()
+        form_layout.addRow("Username:", self.username_input)
+        form_layout.addRow("Password:", self.password_input)
+        form_layout.addRow("", self.remember_me)
 
-    if choice == "1":
-        view_profile()
-    elif choice == "2":
-        print("Logging out...")
-    else:
-        print("Invalid choice. Please try again.")
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(login_button)
+        button_layout.addWidget(cancel_button)
+
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(title)
+        main_layout.addLayout(form_layout)
+        main_layout.addSpacing(10)
+        main_layout.addLayout(button_layout)
+
+        self.setLayout(main_layout)
+
+    def handle_login(self):
+        username = self.username_input.text()
+        password = self.password_input.text()
+
+        if not username or not password:
+            QMessageBox.warning(self, "Input Error", "Both fields are required.")
+            return
+
+        try:
+            user_data = pd.read_csv(DATA_FILE_PATH, dtype={'ID': str})
+        except FileNotFoundError:
+            QMessageBox.critical(self, "Error", "Password file not found.")
+            return
+
+        user_row = user_data[
+            (user_data['Username'] == username) & (user_data['Password'] == password)
+        ]
+
+        if user_row.empty:
+            QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
+            return
+
+        user_role = user_row.iloc[0]["Role"]
+        if user_role == "Student":
+            QMessageBox.information(self, "Login Success", "Welcome, Student!")
+            self.dashboard = StudentProfile(username, password)
+            self.dashboard.show()
+        else:
+            QMessageBox.warning(self, "Login Failed", "User role not recognized.")
+
+
+class StudentProfile(QWidget):
+    def __init__(self, username, password):
+        super().__init__()
+        self.username = username
+        self.password = password
+        self.df = pd.read_csv(DATA_FILE_PATH)
+        self.df_grade = pd.read_csv(GRADE_FILE_PATH)
+
+        self.setWindowTitle("Student Profile")
+        self.setGeometry(0, 0, 600, 1000)
+        self.create_ui()
+        self.load_personal_info()
+        self.load_academic_record()
+        self.load_eca_record()
+
+    def create_ui(self):
+        self.main_layout = QVBoxLayout()
+
+        title_layout = QHBoxLayout()
+        title = QLabel("Student Profile")
+        title.setStyleSheet("font-size: 40px;")
+        self.edit_button = QPushButton("Edit")
+        self.edit_button.clicked.connect(self.toggle_edit_mode)
+
+        title_layout.addWidget(title)
+        title_layout.addStretch()
+        title_layout.addWidget(self.edit_button)
+
+        self.main_layout.addLayout(title_layout)
+
+        profile_pic = QLabel()
+        profile_pic.setFixedSize(100, 100)
+        profile_pic.setStyleSheet("background-color: gray; border-radius: 50px;")
+        profile_pic.setAlignment(Qt.AlignCenter)
+
+        self.name_label = QLabel(self.username)
+        self.name_label.setAlignment(Qt.AlignCenter)
+
+        self.main_layout.addWidget(profile_pic)
+        self.main_layout.addWidget(self.name_label)
+
+    def load_personal_info(self):
+        self.name_edit = QLineEdit()
+        self.dob_edit = QLineEdit()
+        self.address_edit = QLineEdit()
+        self.contact_edit = QLineEdit()
+        self.class_edit = QLineEdit()
+        self.section_edit = QLineEdit()
+
+        user_row = self.df[
+            (self.df["Username"] == self.username) & (self.df["Password"] == self.password)
+        ]
+
+        if not user_row.empty:
+            data = user_row.iloc[0]
+            self.name_edit.setText(str(data.get("Name", "")))
+            self.dob_edit.setText(str(data.get("DOB", "")))
+            self.address_edit.setText(str(data.get("Address", "")))
+            self.contact_edit.setText(str(data.get("Contact", "")))
+            self.class_edit.setText(str(data.get("Class", "")))
+            self.section_edit.setText(str(data.get("Section", "")))
+        else:
+            QMessageBox.warning(self, "Error", "User data not found.")
+
+        self.main_layout.addWidget(QLabel("Personal Information:"))
+        for label, widget in {
+            "Name": self.name_edit, "DOB": self.dob_edit,
+            "Address": self.address_edit, "Contact": self.contact_edit,
+            "Class": self.class_edit, "Section": self.section_edit
+        }.items():
+            self.main_layout.addLayout(self._form_row(label, widget))
+
+    def load_academic_record(self):
+        self.main_layout.addWidget(QLabel("Academic Grade:"))
+        user_row = self.df_grade[self.df_grade['Username'] == self.username]
+
+        if user_row.empty:
+            return
+
+        self.grade_edits = {}
+        subjects = ["Math", "Science", "Computer", "Social", "Nepali"]
+
+        for subject in subjects:
+            grade = user_row[subject].iloc[0]
+            grade_input = QLineEdit(str(grade))
+            grade_input.setReadOnly(True)
+            self.grade_edits[subject] = grade_input
+            self.main_layout.addLayout(self._form_row(subject, grade_input))
+
+    def load_eca_record(self):
+        self.main_layout.addWidget(QLabel("Extracurricular Activities (ECA):"))
+
+        self.music_cb = QCheckBox("Music")
+        self.dance_cb = QCheckBox("Dance")
+        self.football_cb = QCheckBox("Football")
+        self.basketball_cb = QCheckBox("Basketball")
+        self.coding_cb = QCheckBox("Coding Club")
+
+        for section, widgets in {
+            "Arts & Culture": [self.music_cb, self.dance_cb],
+            "Sports": [self.football_cb, self.basketball_cb],
+            "Academic & Intellectual": [self.coding_cb],
+        }.items():
+            self.main_layout.addWidget(QLabel(section))
+            for w in widgets:
+                self.main_layout.addWidget(w)
+
+        submit_button = QPushButton("Submit")
+        self.main_layout.addWidget(submit_button)
+
+        self.setLayout(self.main_layout)
+
+    def toggle_edit_mode(self):
+        user_data = {
+            "Name": self.name_edit.text(),
+            "DOB": self.dob_edit.text(),
+            "Address": self.address_edit.text(),
+            "Contact": self.contact_edit.text(),
+            "Class": self.class_edit.text(),
+            "Section": self.section_edit.text(),
+        }
+        self.editor_window = EditStudentWindow(user_data)
+        self.editor_window.data_updated.connect(self.update_profile_data)
+        self.editor_window.show()
+
+    def update_profile_data(self, updated_data):
+        for field, widget in {
+            "Name": self.name_edit,
+            "DOB": self.dob_edit,
+            "Address": self.address_edit,
+            "Contact": self.contact_edit,
+            "Class": self.class_edit,
+            "Section": self.section_edit,
+        }.items():
+            widget.setText(updated_data[field])
+
+        self.name_label.setText(updated_data["Name"])
+
+        try:
+            df = pd.read_csv(DATA_FILE_PATH, dtype=str)
+            user_index = df[
+                (df["Username"] == self.username) & (df["Password"] == self.password)
+            ].index
+
+            if not user_index.empty:
+                idx = user_index[0]
+                for field in updated_data:
+                    df.at[idx, field] = updated_data[field]
+
+                df.to_csv(DATA_FILE_PATH, index=False)
+                self.df = df
+                QMessageBox.information(self, "Updated", "Profile updated successfully.")
+            else:
+                QMessageBox.warning(self, "Error", "User not found in data file.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to update CSV: {e}")
+
+    def _form_row(self, label, widget):
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel(label + ":"))
+        layout.addWidget(widget)
+        return layout
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    login_page = LoginPage()
+    login_page.show()
+    sys.exit(app.exec_())
