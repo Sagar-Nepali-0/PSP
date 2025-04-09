@@ -1,4 +1,5 @@
 Username,Password,Role,Name,DOB,Address,Contact,Class,Section
-student,student123,Student,Ram Kumar,5345,Jorpati,6546565,12,B
-batman,batman123,Student,joke,212,Pokhara,6546546,11,A
-superman,superman123,Student,superman,5345,Jorpati,32443,11,A
+student,student123,Student,Ram Kumar,5345.0,Jorpati,6546565.0,12.0,B
+batman,batman123,Student,joke,212.0,Pokhara,6546546.0,11.0,A
+superman,superman123,Student,superman,5345.0,Jorpati,32443.0,11.0,A
+kite,kite123,Student,kite,,,675675,12,D

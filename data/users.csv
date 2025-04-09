@@ -1,3 +1,5 @@
 ID,Name,Username,Password,Email,Role
 1,admin,admin,admin123,admin@gmail.com,Admin
 2,student,student,student123,student@gmail.com,Student
+6,kite,kite,kite123,ffffw,Student
+9,kite,kite,kite123,fedfsf,Student

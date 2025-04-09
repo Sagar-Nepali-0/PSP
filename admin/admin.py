@@ -3,14 +3,15 @@ from tkinter import messagebox, ttk
 import pandas as pd
 import os
 
-USERS_FILE = "data/users.csv"
+ADMIN_FILE = "data/users.csv"
+STUDENT_FILE = "data/student.csv"
 DATA_FILE_PATH = "data/passwords.csv"
 
 # Ensure the student file exists
 def initialize_file():
-    if not os.path.exists(USERS_FILE):
+    if not os.path.exists(ADMIN_FILE):
         df = pd.DataFrame(columns=["ID", "Name","Username","Password","Email","Role"])
-        df.to_csv(USERS_FILE, index=False)
+        df.to_csv(ADMIN_FILE, index=False)
 
 # GUI Application Class
 class StudentManagementApp:
@@ -103,7 +104,7 @@ class StudentManagementApp:
             messagebox.showerror("Error", "All fields are required.")
             return
 
-        df = pd.read_csv(USERS_FILE)
+        df = pd.read_csv(ADMIN_FILE)
         if users_data["ID"] in df["ID"].astype(str).values:
             messagebox.showerror("Error", "User ID already exists.")
             return
@@ -118,9 +119,9 @@ class StudentManagementApp:
             "Email": users_data["Email"],
             "Role": users_data["Role"]
         }
-        df = pd.read_csv(USERS_FILE)
+        df = pd.read_csv(ADMIN_FILE)
         df = pd.concat([df, pd.DataFrame([user_data_to_add])], ignore_index=True)
-        df.to_csv(USERS_FILE, index=False)
+        df.to_csv(ADMIN_FILE, index=False)
 
         # Add only Username, Password, and Role to the passwords file
         passwords_data_to_add = {
@@ -132,6 +133,20 @@ class StudentManagementApp:
         passwords_df = pd.concat([passwords_df, pd.DataFrame([passwords_data_to_add])], ignore_index=True)
         passwords_df.to_csv(DATA_FILE_PATH, index=False)
 
+        student_data_to_add = {
+            "Username": users_data["Username"],
+            "Password": users_data["Password"],
+            "Role": users_data["Role"]
+        }
+
+        try:
+            student_df = pd.read_csv(STUDENT_FILE)
+        except FileNotFoundError:
+            student_df = pd.DataFrame(columns=["Username"])
+    
+        student_df = pd.concat([student_df, pd.DataFrame([student_data_to_add])], ignore_index=True)
+        student_df.to_csv(STUDENT_FILE, index=False)
+
         messagebox.showinfo("Success", "User added successfully.")
         self.create_admin_panel()
 
@@ -139,7 +154,7 @@ class StudentManagementApp:
         self.clear_root()
         tk.Label(self.root, text="All Students", font=("Arial", 16)).pack(pady=10)
         try:
-            df = pd.read_csv(USERS_FILE)
+            df = pd.read_csv(ADMIN_FILE)
             if df.empty:
                 tk.Label(self.root, text="No students found.").pack()
             else:
@@ -166,12 +181,12 @@ class StudentManagementApp:
     def delete_user(self):
         user_id = self.delete_entry.get().strip()
         try:
-            df = pd.read_csv(USERS_FILE)
+            df = pd.read_csv(ADMIN_FILE)
             df["ID"] = df["ID"].astype(str)
             if user_id in df["ID"].values:
                 user_to_delete = df[df["ID"] == user_id]["Username"].values[0]
                 df = df[df["ID"] != user_id]
-                df.to_csv(USERS_FILE, index=False)
+                df.to_csv(ADMIN_FILE, index=False)
 
                 passwords_df = pd.read_csv(DATA_FILE_PATH)
                 passwords_df["Username"] = passwords_df["Username"].astype(str)

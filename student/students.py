@@ -7,11 +7,12 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import Qt
 from studentGUI import EditStudentWindow
-
+import csv
 # Constants
 ICON_PATH = "image/icon.png"
 DATA_FILE_PATH = "data/student.csv"
 GRADE_FILE_PATH = "data/grades.csv"
+ECA_PATH = "data/eca.csv"
 
 
 class LoginPage(QWidget):
@@ -194,6 +195,7 @@ class StudentProfile(QWidget):
         self.basketball_cb = QCheckBox("Basketball")
         self.coding_cb = QCheckBox("Coding Club")
 
+        # Add the checkboxes to the layout
         for section, widgets in {
             "Arts & Culture": [self.music_cb, self.dance_cb],
             "Sports": [self.football_cb, self.basketball_cb],
@@ -204,9 +206,62 @@ class StudentProfile(QWidget):
                 self.main_layout.addWidget(w)
 
         submit_button = QPushButton("Submit")
+        submit_button.clicked.connect(self.save_eca_record)
         self.main_layout.addWidget(submit_button)
 
+        # Pre-select checkboxes based on saved ECA data
+        self.load_eca_data()
+
         self.setLayout(self.main_layout)
+
+    def load_eca_data(self):
+        try:
+            eca_df = pd.read_csv(ECA_PATH)
+
+            # Find the row for the logged-in user
+            user_eca = eca_df[eca_df['Username'] == self.name_edit.text()]
+
+            if not user_eca.empty:
+                # Check each activity column and set the corresponding checkbox
+                self.music_cb.setChecked(user_eca.iloc[0]['Music'] == 'Yes')
+                self.dance_cb.setChecked(user_eca.iloc[0]['Dance'] == 'Yes')
+                self.football_cb.setChecked(user_eca.iloc[0]['Football'] == 'Yes')
+                self.basketball_cb.setChecked(user_eca.iloc[0]['Basketball'] == 'Yes')
+                self.coding_cb.setChecked(user_eca.iloc[0]['Coding Club'] == 'Yes')
+        except Exception as e:
+            print(f"Error loading ECA data: {e}")
+
+    def save_eca_record(self):
+        selected_activities = {
+            "Music": self.music_cb.isChecked(),
+            "Dance": self.dance_cb.isChecked(),
+            "Football": self.football_cb.isChecked(),
+            "Basketball": self.basketball_cb.isChecked(),
+            "Coding Club": self.coding_cb.isChecked()
+        }
+
+        # Convert checked activities to 'Yes' and unchecked to 'No'
+        eca_data = {'Username': self.name_edit.text()}
+        for activity, checked in selected_activities.items():
+            eca_data[activity] = 'Yes' if checked else 'No'
+
+        try:
+            eca_df = pd.read_csv(ECA_PATH)
+
+            # Check if the student already exists in the CSV, and update or append accordingly
+            if self.name_edit.text() in eca_df['Username'].values:
+                eca_df.loc[eca_df['Username'] == self.name_edit.text(), selected_activities.keys()] = list(eca_data.values())[1:]
+            else:
+                # Using concat() to append the new data
+                new_row = pd.DataFrame([eca_data])
+                eca_df = pd.concat([eca_df, new_row], ignore_index=True)
+
+            # Save the updated DataFrame to the CSV
+            eca_df.to_csv(ECA_PATH, index=False)
+
+            QMessageBox.information(self, "Success", "Extracurricular activities saved successfully.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to save activities: {e}")
 
     def toggle_edit_mode(self):
         user_data = {
