@@ -1,116 +1,53 @@
 import sys
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QLabel, QLineEdit, QPushButton, QCheckBox,
-    QVBoxLayout, QHBoxLayout, QFormLayout, QMessageBox
-)
-from PyQt5.QtGui import QFont, QIcon
+import subprocess
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout
 from PyQt5.QtCore import Qt
-import pandas as pd
-# from admin.admin_panel import admin_panel
+from PyQt5.QtGui import QIcon
 
-# Constants
-ICON_PATH = "image/icon.png"
-DATA_FILE_PATH = "data/passwords.csv"
-
-class LoginPage(QWidget):
+class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setup_window()
-        self.init_ui()
 
-    def setup_window(self):
-        """Configure window properties."""
-        self.setWindowTitle("Login Page")
-        self.setGeometry(500, 200, 400, 300)
-        self.setWindowIcon(QIcon(ICON_PATH))
-        self.setFixedSize(400, 300)
+        self.setWindowTitle('Software Management')
+        self.setWindowIcon(QIcon('icon.png'))  # Optional: set an icon
+        self.setGeometry(100, 100, 300, 200)  # Initial window size and position
 
-    def init_ui(self):
-        """Initialize the user interface."""
-        # Title
-        title = QLabel("🔐 Secure Login")
-        title.setFont(QFont("Arial", 18, QFont.Bold))
-        title.setAlignment(Qt.AlignCenter)
+        self.layout = QVBoxLayout()
 
-        # Form inputs
-        self.username_input = QLineEdit()
-        self.username_input.setPlaceholderText("Enter your username")
+        # Create buttons for different files
+        self.button1 = QPushButton('Admin')
+        self.button2 = QPushButton('Student')
 
-        self.password_input = QLineEdit()
-        self.password_input.setEchoMode(QLineEdit.Password)
-        self.password_input.setPlaceholderText("Enter your password")
+        # Connect buttons to respective functions
+        self.button1.clicked.connect(self.open_admin)
+        self.button2.clicked.connect(self.open_student)
 
-        # Remember Me
-        self.remember_me = QCheckBox("Remember Me")
+        # Add buttons to layout
+        self.layout.addWidget(self.button1)
+        self.layout.addWidget(self.button2)
 
-        # Buttons
-        login_button = QPushButton("Login")
-        login_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 6px;")
-        login_button.clicked.connect(self.handle_login)
+        self.setLayout(self.layout)
 
-        cancel_button = QPushButton("Cancel")
-        cancel_button.setStyleSheet("background-color: #f44336; color: white; padding: 6px;")
-        cancel_button.clicked.connect(self.close)
+        # Center window on the screen
+        self.center_window()
 
-        # Layouts
-        form_layout = QFormLayout()
-        form_layout.addRow("Username:", self.username_input)
-        form_layout.addRow("Password:", self.password_input)
-        form_layout.addRow("", self.remember_me)
+    def center_window(self):
+        screen_geometry = QApplication.desktop().availableGeometry()
+        window_geometry = self.frameGeometry()
+        center_point = screen_geometry.center()
+        window_geometry.moveCenter(center_point)
+        self.move(window_geometry.topLeft())
 
-        button_layout = QHBoxLayout()
-        button_layout.addWidget(login_button)
-        button_layout.addWidget(cancel_button)
+    def open_admin(self):
+        self.close()
+        subprocess.run([sys.executable, 'admin/admin.py'])
 
-        main_layout = QVBoxLayout()
-        main_layout.addWidget(title)
-        main_layout.addLayout(form_layout)
-        main_layout.addSpacing(10)
-        main_layout.addLayout(button_layout)
+    def open_student(self):
+        self.close()
+        subprocess.run([sys.executable, 'student/students.py'])
 
-        self.setLayout(main_layout)
-
-    def handle_login(self):
-        """Handle login logic."""
-        username = self.username_input.text()
-        password = self.password_input.text()
-
-        # Validate inputs
-        if not username or not password:
-            QMessageBox.warning(self, "Input Error", "Both fields are required.")
-            return
-
-        try:
-            # Read user data
-            user_data = pd.read_csv(DATA_FILE_PATH, dtype={'ID': str})
-        except FileNotFoundError:
-            QMessageBox.critical(self, "Error", "Password file not found.")
-            return
-
-        # Authenticate user
-        user_row = user_data[
-            (user_data['Username'] == username)&(user_data['Password'] == password)
-        ]
-
-        if user_row.empty:
-            QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
-            return
-
-        # Determine user role
-        user_role = user_row.iloc[0]["Role"]
-
-        if user_role == "Admin":
-            QMessageBox.information(self, "Login Success", "Welcome, Admin!")
-            print("Admin") 
-            # just function soon GUI appear
-        elif user_role == "Student":
-            QMessageBox.information(self, "Login Success", "Welcome, Student!")
-            print("STUDENT")  # Replace with appropriate student panel functionality
-        else:
-            QMessageBox.warning(self, "Login Failed", "User role not recognized.")
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
-    login_page = LoginPage()
-    login_page.show()
+    main_window = MainWindow()
+    main_window.show()
     sys.exit(app.exec_())
