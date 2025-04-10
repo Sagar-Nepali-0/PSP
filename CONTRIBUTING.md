@@ -1,9 +1,24 @@
-# Contributing
+# How to Contribute
 
-Contributions are welcome! To contribute:
-1. Fork the repository.
-2. Create a new branch.
-3. Make your changes.
-4. Submit a pull request.
+We welcome contributions from everyone. Here's how you can help:
 
-Please ensure your code follows the existing style and includes tests where applicable. If you are fixing a bug, include a description of the issue and your solution.
+## Reporting Issues
+
+- Check if the issue already exists
+- Provide detailed reproduction steps
+- Include screenshots if applicable
+
+## Making Changes
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## Coding Standards
+
+- Follow PEP 8 style guide
+- Include docstrings for all functions
+- Write unit tests for new features
+- Keep commits small and focused
