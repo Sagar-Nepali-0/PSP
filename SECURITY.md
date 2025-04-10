@@ -1,5 +1,17 @@
 # Security Policy
 
-If you find a security vulnerability, please report it by emailing sagarnepali1100@gmail.com. We will respond and work with you to resolve the issue promptly.
-Please do not open an issue in the repository for security-related problems.
+## Supported Versions
 
+Only the latest version of the software receives security updates.
+
+## Reporting a Vulnerability
+
+Please report security vulnerabilities by email to sagarnepali1100@gmail.com.
+
+We will acknowledge your email within 48 hours, and will send a more detailed response within 7 days.
+
+## Data Security
+
+- All passwords are stored securely (hashed)
+- Input validation is implemented throughout
+- Regular security audits are performed
